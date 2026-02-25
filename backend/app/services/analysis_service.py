@@ -5,11 +5,7 @@ import base64
 
 
 def generate_graph(df):
-    """
-    Generates histogram for numeric columns
-    and returns base64 encoded image
-    """
-
+    
     numeric_df = df.select_dtypes(include=["number"])
 
     if numeric_df.empty:
@@ -28,10 +24,7 @@ def generate_graph(df):
     return base64.b64encode(buf.read()).decode()
 
 
-def analyze_data(file):
-    """
-    Performs statistical analysis and correlation
-    """
+def analyze_data(file): 
 
     df = pd.read_csv(file)
 
@@ -41,6 +34,7 @@ def analyze_data(file):
         "column_names": list(df.columns),
         "statistics": df.describe(include="all").fillna(0).to_dict(),
         "correlation": df.corr(numeric_only=True).fillna(0).to_dict(),
+        "missing_values": df.isnull().sum().to_dict()
     }
 
     graph = generate_graph(df)
