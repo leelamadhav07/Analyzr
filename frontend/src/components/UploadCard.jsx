@@ -80,6 +80,7 @@ function UploadCard() {
                 <div className="summary">
                     <h3>Analysis Results</h3>
 
+                    {/* AI Summary */}
                     {explanation && (
                         <div className="explanation-panel">
                             <h4>AI Summary</h4>
@@ -87,9 +88,63 @@ function UploadCard() {
                         </div>
                     )}
 
-                    <pre>
-                        {JSON.stringify(summary, null, 2)}
-                    </pre>
+                    {/* Dataset Info */}
+                    <div className="dataset-info">
+                        <p><strong>Rows:</strong> {summary.rows}</p>
+                        <p><strong>Columns:</strong> {summary.columns}</p>
+                    </div>
+
+                    {/* Missing Values */}
+                    <div className="section">
+                        <h4>Missing Values</h4>
+                        <pre>{JSON.stringify(summary.missing_values, null, 2)}</pre>
+                    </div>
+
+                    {/* Correlation */}
+                    <div className="section">
+                        <h4>Correlation Matrix</h4>
+                        <pre>{JSON.stringify(summary.correlation, null, 2)}</pre>
+                    </div>
+
+                    {/* Charts */}
+                    {summary.charts && (
+                        <div className="charts">
+                            <h4>Charts</h4>
+
+                            {summary.charts.histogram && (
+                                <div>
+                                    <h5>Histogram</h5>
+                                    <img
+                                        src={`data:image/png;base64,${summary.charts.histogram}`}
+                                        alt="Histogram"
+                                        style={{ width: "100%", borderRadius: "10px" }}
+                                    />
+                                </div>
+                            )}
+
+                            {summary.charts.scatter_plot && (
+                                <div>
+                                    <h5>Scatter Plot</h5>
+                                    <img
+                                        src={`data:image/png;base64,${summary.charts.scatter_plot}`}
+                                        alt="Scatter"
+                                        style={{ width: "100%", borderRadius: "10px" }}
+                                    />
+                                </div>
+                            )}
+
+                            {summary.charts.bar_chart && (
+                                <div>
+                                    <h5>Bar Chart</h5>
+                                    <img
+                                        src={`data:image/png;base64,${summary.charts.bar_chart}`}
+                                        alt="Bar"
+                                        style={{ width: "100%", borderRadius: "10px" }}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
             )}
         </div>
