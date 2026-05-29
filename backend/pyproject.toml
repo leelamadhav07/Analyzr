@@ -11,5 +11,7 @@ dependencies = [
     "pandas>=2.3.3",
     "python-dotenv>=1.2.1",
     "python-multipart>=0.0.22",
+    "reportlab>=4.5.1",
+    "seaborn>=0.13.2",
     "uvicorn>=0.41.0",
 ]

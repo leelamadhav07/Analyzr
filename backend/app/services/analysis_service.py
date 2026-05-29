@@ -2,6 +2,8 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import io
 import base64
+from app.services.data_store import uploaded_df
+import app.services.data_store as store
 
 
 def encode_plot():
@@ -82,7 +84,7 @@ def generate_scatter_plot(df):
 def analyze_data(file):
 
     df = pd.read_csv(file)
-
+    store.uploaded_df = df
     numeric_df = df.select_dtypes(include=["number"])
 
     # Limit correlation size (VERY IMPORTANT)
@@ -99,14 +101,7 @@ def analyze_data(file):
         "median_values": numeric_df.median().round(3).to_dict(),
         "missing_values": df.isnull().sum().to_dict(),
         "correlation": correlation_matrix.round(3).to_dict(),
+        "preview": df.head(10).fillna("").to_dict(orient="records"),
     }
-
-    charts = {
-        "histogram": generate_histogram(df),
-        "bar_chart": generate_bar_chart(df),
-        "scatter_plot": generate_scatter_plot(df),
-    }
-
-    summary["charts"] = charts
 
     return summary

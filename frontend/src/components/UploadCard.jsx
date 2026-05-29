@@ -7,6 +7,13 @@ function UploadCard() {
     const [explanation, setExplanation] = useState(null);
     const [loading, setLoading] = useState(false);
     const [errorMsg, setErrorMsg] = useState("");
+    const [column1, setColumn1] = useState("");
+    const [column2, setColumn2] = useState("");
+    const [correlationResult, setCorrelationResult] = useState(null);
+    const [chartType, setChartType] = useState("");
+    const [xColumn, setXColumn] = useState("");
+    const [yColumn, setYColumn] = useState("");
+    const [generatedChart, setGeneratedChart] = useState(null);
 
     const handleUpload = async () => {
         if (!file) {
@@ -46,6 +53,74 @@ function UploadCard() {
         }
     };
 
+    const handleCorrelation = async () => {
+        if (!column1 || !column2) {
+            alert("Please select both columns");
+            return;
+        }
+
+        try {
+            const response = await axios.post(
+                "http://127.0.0.1:8000/correlation",
+                {
+                    column1,
+                    column2,
+                }
+            );
+
+            setCorrelationResult(response.data);
+        } catch (error) {
+            console.error(error);
+            alert("Failed to calculate correlation");
+        }
+    };
+
+    const handleGenerateChart = async () => {
+        if (!chartType) {
+            alert("Please select chart type");
+            return;
+        }
+
+        if (
+            chartType !== "heatmap" &&
+            !xColumn
+        ) {
+            alert("Please select a feature");
+            return;
+        }
+
+        try {
+            const payload = {
+                chart_type: chartType,
+                x_column: xColumn,
+            };
+
+            if (
+                chartType === "scatter" &&
+                yColumn
+            ) {
+                payload.y_column = yColumn;
+            }
+
+            const response = await axios.post(
+                "http://127.0.0.1:8000/generate-chart",
+                payload
+            );
+
+            setGeneratedChart(response.data.image);
+
+        } catch (error) {
+            console.error(error);
+            alert("Failed to generate chart");
+        }
+    };
+
+    const downloadReport = () => {
+        window.open(
+            "http://127.0.0.1:8000/download-report",
+            "_blank"
+        );
+    };
     return (
         <div className="card">
             <h2>Analyze CSV Data</h2>
@@ -88,6 +163,16 @@ function UploadCard() {
                 <div className="summary">
 
                     <h3>Analysis Results</h3>
+
+                    <button
+                        className="primary"
+                        onClick={downloadReport}
+                        style={{
+                            marginBottom: "20px"
+                        }}
+                    >
+                        📥 Download Report
+                    </button>
 
                     {/* AI Summary */}
                     {explanation && (
@@ -185,75 +270,295 @@ function UploadCard() {
                         </table>
                     </div>
 
-                    {/* Correlation Section */}
                     <div className="section">
-                        <h4>📈 Correlation Analysis</h4>
+                        <h4>📄 Dataset Preview</h4>
 
-                        <p>
-                            Correlation matrix calculated successfully.
-                        </p>
+                        {summary.preview &&
+                            summary.preview.length > 0 && (
 
-                        <p>
-                            Heatmap visualization will be added in the next
-                            version for better interpretation.
-                        </p>
+                                <div
+                                    style={{
+                                        overflowX: "auto",
+                                        marginTop: "15px",
+                                    }}
+                                >
+                                    <table
+                                        style={{
+                                            width: "100%",
+                                            borderCollapse: "collapse",
+                                        }}
+                                    >
+                                        <thead>
+                                            <tr>
+                                                {Object.keys(
+                                                    summary.preview[0]
+                                                ).map((column) => (
+                                                    <th
+                                                        key={column}
+                                                        style={{
+                                                            padding: "10px",
+                                                            textAlign: "left",
+                                                            borderBottom:
+                                                                "1px solid #444",
+                                                        }}
+                                                    >
+                                                        {column}
+                                                    </th>
+                                                ))}
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            {summary.preview.map(
+                                                (row, index) => (
+                                                    <tr key={index}>
+                                                        {Object.values(row).map(
+                                                            (
+                                                                value,
+                                                                idx
+                                                            ) => (
+                                                                <td
+                                                                    key={idx}
+                                                                    style={{
+                                                                        padding:
+                                                                            "10px",
+                                                                        borderBottom:
+                                                                            "1px solid #333",
+                                                                    }}
+                                                                >
+                                                                    {String(
+                                                                        value
+                                                                    )}
+                                                                </td>
+                                                            )
+                                                        )}
+                                                    </tr>
+                                                )
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            )}
+                    </div>
+
+                    {/* Correlation Explorer */}
+                    <div className="section">
+                        <h4>🔗 Correlation Explorer</h4>
+
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "15px",
+                                flexWrap: "wrap",
+                                marginBottom: "15px",
+                            }}
+                        >
+                            <select
+                                value={column1}
+                                onChange={(e) => setColumn1(e.target.value)}
+                                style={{
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    minWidth: "180px",
+                                }}
+                            >
+                                <option value="">Select Column 1</option>
+
+                                {summary.column_names?.map((column) => (
+                                    <option
+                                        key={column}
+                                        value={column}
+                                    >
+                                        {column}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={column2}
+                                onChange={(e) => setColumn2(e.target.value)}
+                                style={{
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    minWidth: "180px",
+                                }}
+                            >
+                                <option value="">Select Column 2</option>
+
+                                {summary.column_names?.map((column) => (
+                                    <option
+                                        key={column}
+                                        value={column}
+                                    >
+                                        {column}
+                                    </option>
+                                ))}
+                            </select>
+
+                            <button
+                                className="primary"
+                                onClick={handleCorrelation}
+                            >
+                                Check Correlation
+                            </button>
+                        </div>
+
+                        {correlationResult && (
+                            <div
+                                style={{
+                                    background: "#1f2937",
+                                    padding: "15px",
+                                    borderRadius: "10px",
+                                    marginTop: "10px",
+                                }}
+                            >
+                                <h4>
+                                    Correlation:
+                                    {" "}
+                                    {correlationResult.correlation}
+                                </h4>
+
+                                <p>
+                                    {correlationResult.interpretation}
+                                </p>
+                            </div>
+                        )}
                     </div>
 
                     {/* Charts */}
-                    {summary.charts && (
-                        <div className="charts">
-                            <h4>📊 Visualizations</h4>
+                    <div className="section">
+                        <h4>📊 Visualization Studio</h4>
 
-                            {summary.charts.histogram && (
-                                <div style={{ marginBottom: "20px" }}>
-                                    <h5>Histogram</h5>
+                        <div
+                            style={{
+                                display: "flex",
+                                gap: "15px",
+                                flexWrap: "wrap",
+                                marginBottom: "20px",
+                            }}
+                        >
 
-                                    <img
-                                        src={`data:image/png;base64,${summary.charts.histogram}`}
-                                        alt="Histogram"
-                                        style={{
-                                            width: "100%",
-                                            borderRadius: "10px",
-                                        }}
-                                    />
-                                </div>
+                            {/* Chart Type */}
+                            <select
+                                value={chartType}
+                                onChange={(e) =>
+                                    setChartType(e.target.value)
+                                }
+                                style={{
+                                    padding: "10px",
+                                    borderRadius: "8px",
+                                    minWidth: "180px",
+                                }}
+                            >
+                                <option value="">
+                                    Select Chart Type
+                                </option>
+
+                                <option value="histogram">
+                                    Histogram
+                                </option>
+
+                                <option value="scatter">
+                                    Scatter Plot
+                                </option>
+
+                                <option value="bar">
+                                    Bar Chart
+                                </option>
+
+                                <option value="box">
+                                    Box Plot
+                                </option>
+
+                                <option value="heatmap">
+                                    Heatmap
+                                </option>
+                            </select>
+
+                            {/* X Column */}
+                            {chartType !== "heatmap" && (
+                                <select
+                                    value={xColumn}
+                                    onChange={(e) => setXColumn(e.target.value)}
+                                    style={{
+                                        padding: "10px",
+                                        borderRadius: "8px",
+                                        minWidth: "180px",
+                                    }}
+                                >
+                                    <option value="">
+                                        Select Feature
+                                    </option>
+
+                                    {summary.column_names?.map((column) => (
+                                        <option
+                                            key={column}
+                                            value={column}
+                                        >
+                                            {column}
+                                        </option>
+                                    ))}
+                                </select>
                             )}
 
-                            {summary.charts.scatter_plot && (
-                                <div style={{ marginBottom: "20px" }}>
-                                    <h5>Scatter Plot</h5>
+                            {/* Y Column */}
+                            {chartType === "scatter" && (
+                                <select
+                                    value={yColumn}
+                                    onChange={(e) =>
+                                        setYColumn(e.target.value)
+                                    }
+                                    style={{
+                                        padding: "10px",
+                                        borderRadius: "8px",
+                                        minWidth: "180px",
+                                    }}
+                                >
+                                    <option value="">
+                                        Select Y Column
+                                    </option>
 
-                                    <img
-                                        src={`data:image/png;base64,${summary.charts.scatter_plot}`}
-                                        alt="Scatter Plot"
-                                        style={{
-                                            width: "100%",
-                                            borderRadius: "10px",
-                                        }}
-                                    />
-                                </div>
+                                    {summary.column_names?.map((column) => (
+                                        <option
+                                            key={column}
+                                            value={column}
+                                        >
+                                            {column}
+                                        </option>
+                                    ))}
+                                </select>
                             )}
 
-                            {summary.charts.bar_chart && (
-                                <div style={{ marginBottom: "20px" }}>
-                                    <h5>Bar Chart</h5>
-
-                                    <img
-                                        src={`data:image/png;base64,${summary.charts.bar_chart}`}
-                                        alt="Bar Chart"
-                                        style={{
-                                            width: "100%",
-                                            borderRadius: "10px",
-                                        }}
-                                    />
-                                </div>
-                            )}
+                            <button
+                                className="primary"
+                                onClick={handleGenerateChart}
+                            >
+                                Generate Chart
+                            </button>
                         </div>
-                    )}
+
+                        {generatedChart && (
+                            <div
+                                style={{
+                                    marginTop: "20px",
+                                }}
+                            >
+                                <img
+                                    src={`data:image/png;base64,${generatedChart}`}
+                                    alt="Generated Chart"
+                                    style={{
+                                        width: "100%",
+                                        borderRadius: "12px",
+                                    }}
+                                />
+                            </div>
+                        )}
+                    </div>
                 </div>
             )}
         </div>
     );
 }
+
 
 export default UploadCard;
