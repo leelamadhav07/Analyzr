@@ -55,18 +55,50 @@ def generate_scatter_plot(df):
     return encode_plot()
 
 
+# def analyze_data(file):
+
+#     df = pd.read_csv(file)
+
+#     summary = {
+#         "rows": df.shape[0],
+#         "columns": df.shape[1],
+#         "column_names": list(df.columns),
+#         "mean_values": df.mean(numeric_only=True).to_dict(),
+#         "median_values": df.median(numeric_only=True).to_dict(),
+#         "missing_values": df.isnull().sum().to_dict(),
+#         "correlation": df.corr(numeric_only=True).fillna(0).to_dict(),
+#     }
+
+#     charts = {
+#         "histogram": generate_histogram(df),
+#         "bar_chart": generate_bar_chart(df),
+#         "scatter_plot": generate_scatter_plot(df),
+#     }
+
+#     summary["charts"] = charts
+
+
+#     return summary
 def analyze_data(file):
 
     df = pd.read_csv(file)
 
+    numeric_df = df.select_dtypes(include=["number"])
+
+    # Limit correlation size (VERY IMPORTANT)
+    if numeric_df.shape[1] > 10:
+        numeric_df = numeric_df.iloc[:, :10]
+
+    correlation_matrix = numeric_df.corr().fillna(0)
+
     summary = {
-        "rows": df.shape[0],
-        "columns": df.shape[1],
-        "column_names": list(df.columns),
-        "mean_values": df.mean(numeric_only=True).to_dict(),
-        "median_values": df.median(numeric_only=True).to_dict(),
+        "rows": int(df.shape[0]),
+        "columns": int(df.shape[1]),
+        "column_names": list(df.columns[:20]),  # limit column list
+        "mean_values": numeric_df.mean().round(3).to_dict(),
+        "median_values": numeric_df.median().round(3).to_dict(),
         "missing_values": df.isnull().sum().to_dict(),
-        "correlation": df.corr(numeric_only=True).fillna(0).to_dict(),
+        "correlation": correlation_matrix.round(3).to_dict(),
     }
 
     charts = {

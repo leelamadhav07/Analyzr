@@ -10,7 +10,7 @@ function UploadCard() {
 
     const handleUpload = async () => {
         if (!file) {
-            setErrorMsg("Please select a file first.");
+            setErrorMsg("Please select a CSV file first.");
             return;
         }
 
@@ -23,6 +23,7 @@ function UploadCard() {
 
         try {
             setLoading(true);
+
             const response = await axios.post(
                 "http://127.0.0.1:8000/upload",
                 formData
@@ -32,10 +33,14 @@ function UploadCard() {
                 setErrorMsg(response.data.message);
             } else {
                 setSummary(response.data.data);
-                setExplanation(response.data["llm Explanation"]);
+
+                // Fixed AI summary key
+                setExplanation(response.data.llm_Explanation);
             }
         } catch (error) {
-            setErrorMsg("Upload failed. Please ensure the backend is running.");
+            setErrorMsg(
+                "Upload failed. Please ensure the backend is running."
+            );
         } finally {
             setLoading(false);
         }
@@ -54,6 +59,7 @@ function UploadCard() {
                         setErrorMsg("");
                     }}
                 />
+
                 <button
                     className="primary"
                     onClick={handleUpload}
@@ -72,74 +78,173 @@ function UploadCard() {
             {loading && (
                 <div className="loading-container">
                     <div className="spinner"></div>
-                    <div className="loading-text">Analyzing dataset with AI...</div>
+                    <div className="loading-text">
+                        Analyzing dataset with AI...
+                    </div>
                 </div>
             )}
 
             {summary && !loading && (
                 <div className="summary">
+
                     <h3>Analysis Results</h3>
 
                     {/* AI Summary */}
                     {explanation && (
                         <div className="explanation-panel">
-                            <h4>AI Summary</h4>
+                            <h4>🤖 AI Insights</h4>
                             <p>{explanation}</p>
                         </div>
                     )}
 
-                    {/* Dataset Info */}
-                    <div className="dataset-info">
-                        <p><strong>Rows:</strong> {summary.rows}</p>
-                        <p><strong>Columns:</strong> {summary.columns}</p>
+                    {/* Dataset Overview */}
+                    <h4>📊 Dataset Overview</h4>
+
+                    <div
+                        style={{
+                            display: "flex",
+                            gap: "20px",
+                            marginBottom: "20px",
+                            flexWrap: "wrap",
+                        }}
+                    >
+                        <div
+                            style={{
+                                padding: "15px",
+                                borderRadius: "10px",
+                                background: "#1f2937",
+                                minWidth: "150px",
+                            }}
+                        >
+                            <h3>{summary.rows}</h3>
+                            <p>Rows</p>
+                        </div>
+
+                        <div
+                            style={{
+                                padding: "15px",
+                                borderRadius: "10px",
+                                background: "#1f2937",
+                                minWidth: "150px",
+                            }}
+                        >
+                            <h3>{summary.columns}</h3>
+                            <p>Columns</p>
+                        </div>
                     </div>
 
                     {/* Missing Values */}
                     <div className="section">
-                        <h4>Missing Values</h4>
-                        <pre>{JSON.stringify(summary.missing_values, null, 2)}</pre>
+                        <h4>📋 Missing Values</h4>
+
+                        <table
+                            style={{
+                                width: "100%",
+                                borderCollapse: "collapse",
+                            }}
+                        >
+                            <thead>
+                                <tr>
+                                    <th
+                                        style={{
+                                            borderBottom: "1px solid #555",
+                                            textAlign: "left",
+                                            padding: "10px",
+                                        }}
+                                    >
+                                        Column
+                                    </th>
+
+                                    <th
+                                        style={{
+                                            borderBottom: "1px solid #555",
+                                            textAlign: "left",
+                                            padding: "10px",
+                                        }}
+                                    >
+                                        Missing Count
+                                    </th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {Object.entries(
+                                    summary.missing_values || {}
+                                ).map(([column, count]) => (
+                                    <tr key={column}>
+                                        <td style={{ padding: "10px" }}>
+                                            {column}
+                                        </td>
+
+                                        <td style={{ padding: "10px" }}>
+                                            {count}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
 
-                    {/* Correlation */}
+                    {/* Correlation Section */}
                     <div className="section">
-                        <h4>Correlation Matrix</h4>
-                        <pre>{JSON.stringify(summary.correlation, null, 2)}</pre>
+                        <h4>📈 Correlation Analysis</h4>
+
+                        <p>
+                            Correlation matrix calculated successfully.
+                        </p>
+
+                        <p>
+                            Heatmap visualization will be added in the next
+                            version for better interpretation.
+                        </p>
                     </div>
 
                     {/* Charts */}
                     {summary.charts && (
                         <div className="charts">
-                            <h4>Charts</h4>
+                            <h4>📊 Visualizations</h4>
 
                             {summary.charts.histogram && (
-                                <div>
+                                <div style={{ marginBottom: "20px" }}>
                                     <h5>Histogram</h5>
+
                                     <img
                                         src={`data:image/png;base64,${summary.charts.histogram}`}
                                         alt="Histogram"
-                                        style={{ width: "100%", borderRadius: "10px" }}
+                                        style={{
+                                            width: "100%",
+                                            borderRadius: "10px",
+                                        }}
                                     />
                                 </div>
                             )}
 
                             {summary.charts.scatter_plot && (
-                                <div>
+                                <div style={{ marginBottom: "20px" }}>
                                     <h5>Scatter Plot</h5>
+
                                     <img
                                         src={`data:image/png;base64,${summary.charts.scatter_plot}`}
-                                        alt="Scatter"
-                                        style={{ width: "100%", borderRadius: "10px" }}
+                                        alt="Scatter Plot"
+                                        style={{
+                                            width: "100%",
+                                            borderRadius: "10px",
+                                        }}
                                     />
                                 </div>
                             )}
 
                             {summary.charts.bar_chart && (
-                                <div>
+                                <div style={{ marginBottom: "20px" }}>
                                     <h5>Bar Chart</h5>
+
                                     <img
                                         src={`data:image/png;base64,${summary.charts.bar_chart}`}
-                                        alt="Bar"
-                                        style={{ width: "100%", borderRadius: "10px" }}
+                                        alt="Bar Chart"
+                                        style={{
+                                            width: "100%",
+                                            borderRadius: "10px",
+                                        }}
                                     />
                                 </div>
                             )}

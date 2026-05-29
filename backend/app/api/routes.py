@@ -1,6 +1,6 @@
 from fastapi import APIRouter, UploadFile, File
 from app.services.analysis_service import analyze_data
-from app.services.gemini_service import generate_explanation
+from app.services.groq_service import generate_explanation
 
 router = APIRouter()
 
