@@ -32,7 +32,7 @@ function UploadCard() {
             setLoading(true);
 
             const response = await axios.post(
-                "http://127.0.0.1:8000/upload",
+                "https://analyzr-backend-ybjn.onrender.com/upload",
                 formData
             );
 
@@ -61,7 +61,7 @@ function UploadCard() {
 
         try {
             const response = await axios.post(
-                "http://127.0.0.1:8000/correlation",
+                "https://analyzr-backend-ybjn.onrender.com/correlation",
                 {
                     column1,
                     column2,
@@ -103,7 +103,7 @@ function UploadCard() {
             }
 
             const response = await axios.post(
-                "http://127.0.0.1:8000/generate-chart",
+                "https://analyzr-backend-ybjn.onrender.com/generate-chart",
                 payload
             );
 
@@ -117,7 +117,7 @@ function UploadCard() {
 
     const downloadReport = () => {
         window.open(
-            "http://127.0.0.1:8000/download-report",
+            "https://analyzr-backend-ybjn.onrender.com/download-report",
             "_blank"
         );
     };
